@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TTBL Marketing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ── LOGIN SCREEN ─────────────────────────── -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="brand-logo">T</div>
+        <div>
+          <h1>TTBL Marketing</h1>
+          <p>Internal approvals portal</p>
+        </div>
+      </div>
+      <form id="loginForm" class="login-form">
+        <p id="loginError" class="login-error"></p>
+        <button type="submit" id="loginBtn" class="primary-btn login-submit-btn google-btn">
+          <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style="margin-right:10px;flex-shrink:0">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Sign in with Google
+        </button>
+        <p class="login-note">Only authorised TTBL team members can access this portal.</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── APP SHELL ─────────────────────────────── -->
+  <div id="appShell" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">T</div>
+        <div>
+          <h1>TTBL Marketing</h1>
+          <p>Internal approvals</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="workspace">Workspace</button>
+        <button class="nav-item" data-tab="calendar">Calendar</button>
+        <button class="nav-item" data-tab="library">Library</button>
+        <button class="nav-item" data-tab="analytics">Analytics</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="sidebar-user-icon">👤</span>
+          <span id="userLabel" class="sidebar-user-label"></span>
+        </div>
+        <button id="logoutBtn" class="logout-btn" type="button">Sign out</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Marketing review workspace</p>
+          <h2 id="pageTitle">Content Approval Board</h2>
+        </div>
+      </header>
+
+      <!-- WORKSPACE -->
+      <section class="tab-panel active" id="workspacePanel">
+        <section class="upload-section">
+          <form class="upload-card" id="uploadForm">
+            <div class="upload-grid">
+              <div class="field">
+                <label for="uploader">Uploader</label>
+                <input type="text" id="uploader" value="Marketing Team" readonly />
+              </div>
+
+              <div class="field field-full">
+                <label>Brand / Outlet Selection</label>
+                <div class="brand-dropdown" id="brandDropdown">
+                  <button type="button" class="brand-dropdown-toggle" id="brandDropdownToggle">
+                    <span id="brandDropdownLabel">Select one or more outlets</span>
+                    <span class="dropdown-chevron">⌄</span>
+                  </button>
+                  <div class="brand-dropdown-menu hidden" id="brandDropdownMenu">
+                    <div class="brand-checklist" id="brandChecklist"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="publishDate">Date</label>
+                <input type="date" id="publishDate" required />
+              </div>
+
+              <div class="field">
+                <label for="publishTime">Time</label>
+                <input type="time" id="publishTime" required />
+              </div>
+
+              <div class="field field-full">
+                <label for="notes">Caption</label>
+                <textarea id="notes" placeholder="Add caption"></textarea>
+              </div>
+
+              <div class="field field-full">
+                <label for="fileUpload">Media file(s)</label>
+                <div class="file-drop">
+                  <input type="file" id="fileUpload" accept="image/*,video/*" multiple required />
+                  <span>Choose image(s) or one video</span>
+                </div>
+              </div>
+
+              <div class="field field-full">
+                <label>Upload preview</label>
+                <div id="uploadPreview" class="upload-preview empty">
+                  <span>No file selected</span>
+                </div>
+              </div>
+            </div>
+            <button class="primary-btn" type="submit">Upload asset</button>
+          </form>
+        </section>
+
+        <section class="toolbar">
+          <div class="search-wrap">
+            <input type="text" id="searchInput" placeholder="Search by brand, approver, caption, comments..." />
+          </div>
+          <div class="filters">
+            <select id="statusFilter">
+              <option value="All">All statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="stats-grid">
+          <div class="stat-card"><span>Total</span><strong id="totalCount">0</strong></div>
+          <div class="stat-card"><span>Pending</span><strong id="pendingCount">0</strong></div>
+          <div class="stat-card"><span>Approved</span><strong id="approvedCount">0</strong></div>
+          <div class="stat-card"><span>Comments</span><strong id="changesCount">0</strong></div>
+        </section>
+
+        <section class="board-section">
+          <div class="section-header">
+            <h3>Assets</h3>
+            <p>Approval happens directly on each asset card</p>
+          </div>
+          <div id="emptyState" class="empty-state hidden">
+            <div class="empty-icon">🗂️</div>
+            <h4>No active assets</h4>
+            <p>Upload your first marketing creative to begin the review flow.</p>
+          </div>
+          <div id="mediaList" class="media-grid"></div>
+        </section>
+      </section>
+
+      <!-- CALENDAR -->
+      <section class="tab-panel" id="calendarPanel">
+        <section class="board-section">
+          <div class="calendar-toolbar">
+            <div class="calendar-toolbar-left">
+              <div class="calendar-view-toggle">
+                <button type="button" class="calendar-view-btn active">Month</button>
+                <button type="button" class="calendar-view-btn" disabled>Week</button>
+              </div>
+              <div class="calendar-nav">
+                <button type="button" id="calendarPrevBtn" class="calendar-nav-btn">‹</button>
+                <button type="button" id="calendarNextBtn" class="calendar-nav-btn">›</button>
+              </div>
+              <h3 class="calendar-month-title" id="calendarMonthTitle">March 2026</h3>
+            </div>
+          </div>
+          <div id="calendarEmptyState" class="empty-state hidden">
+            <div class="empty-icon">🗓️</div>
+            <h4>No calendar items yet</h4>
+            <p>Uploaded assets will appear here by scheduled date.</p>
+          </div>
+          <div id="calendarGrid" class="calendar-month-grid"></div>
+        </section>
+      </section>
+
+      <!-- LIBRARY -->
+      <section class="tab-panel" id="libraryPanel">
+        <section class="board-section">
+          <div class="section-header">
+            <h3>Library</h3>
+            <p>All uploaded media in one place</p>
+          </div>
+          <div class="library-sections">
+            <div class="library-section-block">
+              <div class="library-section-header">
+                <h4>Current Library</h4>
+                <p>Assets whose scheduled date has not yet been reached</p>
+              </div>
+              <div id="libraryEmptyState" class="empty-state hidden">
+                <div class="empty-icon">🎞️</div>
+                <h4>No media in current library</h4>
+                <p>Upload assets to populate the library.</p>
+              </div>
+              <div id="libraryGrid" class="library-grid"></div>
+            </div>
+            <div class="library-section-block archive-block">
+              <div class="library-section-header">
+                <h4>Archive</h4>
+                <p>Assets automatically moved here once the scheduled date/time is reached</p>
+              </div>
+              <div id="archiveEmptyState" class="empty-state hidden">
+                <div class="empty-icon">🗃️</div>
+                <h4>No archived assets</h4>
+                <p>Scheduled assets will move here automatically.</p>
+              </div>
+              <div id="archiveGrid" class="library-grid"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section class="tab-panel" id="analyticsPanel">
+        <section class="board-section">
+          <div class="section-header">
+            <h3>Analytics</h3>
+            <p>Overview of workflow activity</p>
+          </div>
+          <div class="analytics-grid">
+            <div class="analytics-card">
+              <h4>Status breakdown</h4>
+              <div id="statusBreakdown" class="analytics-list"></div>
+            </div>
+            <div class="analytics-card">
+              <h4>Approver workload</h4>
+              <div id="approverBreakdown" class="analytics-list"></div>
+            </div>
+            <div class="analytics-card">
+              <h4>Comment activity</h4>
+              <div id="commentBreakdown" class="analytics-list"></div>
+            </div>
+            <div class="analytics-card">
+              <h4>Recent activity</h4>
+              <div id="recentActivity" class="analytics-list"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <!-- ASSET CARD TEMPLATE -->
+  <template id="assetTemplate">
+    <article class="asset-row">
+      <aside class="comments-side">
+        <div class="brands-panel">
+          <div class="brands-panel-title">Brands</div>
+          <div class="brands-panel-list"></div>
+        </div>
+        <div class="comments-panel">
+          <div class="comments-top">
+            <h5>Comments</h5>
+            <span class="comment-count"></span>
+          </div>
+          <div class="comments-list"></div>
+          <div class="comment-form">
+            <div class="comment-form-grid">
+              <select class="comment-user">
+                <option value="">Select username</option>
+                <option>Norbert Vella</option>
+                <option>Thomas Cuschieri</option>
+                <option>Tony Micallef</option>
+                <option>Humbert Mozzi</option>
+              </select>
+            </div>
+            <textarea class="comment-text" placeholder="Write feedback for this asset"></textarea>
+            <button class="comment-btn" type="button">Add comment</button>
+            <div class="created-under-comments">
+              <span class="created-label">Created:</span>
+              <span class="created-value"></span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <article class="media-card">
+        <div class="media-schedule-banner">
+          <span class="banner-scheduled"></span>
+        </div>
+        <div class="media-preview-shell">
+          <div class="media-top-actions">
+            <div class="asset-action-buttons">
+              <button class="edit-asset-btn" type="button">Edit</button>
+              <button class="delete-asset-btn" type="button">Delete</button>
+            </div>
+          </div>
+          <div class="media-preview"></div>
+        </div>
+        <div class="media-body">
+          <div class="media-header">
+            <div class="asset-title-row">
+              <div class="asset-title-icons"></div>
+              <h4 class="asset-name"></h4>
+            </div>
+            <p class="asset-meta"></p>
+          </div>
+          <div class="asset-details-list">
+            <div class="asset-detail-row scheduled-row">
+              <span class="asset-detail-label">Scheduled:</span>
+              <span class="scheduled-value"></span>
+            </div>
+          </div>
+          <div class="caption-block">
+            <div class="caption-title">Caption</div>
+            <p class="asset-notes"></p>
+          </div>
+        </div>
+      </article>
+
+      <div class="approve-col">
+        <button class="approve-icon-btn" type="button" title="Approve asset" aria-label="Approve asset">
+          <span class="tick-icon">✕</span>
+          <span class="approve-label">Needs Review</span>
+        </button>
+      </div>
+    </article>
+  </template>
+
+  <!-- CALENDAR MODAL -->
+  <div id="calendarAssetModal" class="asset-modal hidden">
+    <div class="asset-modal-backdrop" id="calendarAssetModalBackdrop"></div>
+    <div class="asset-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="calendarAssetModalTitle">
+      <button type="button" class="asset-modal-close" id="calendarAssetModalClose" aria-label="Close">×</button>
+      <div class="asset-modal-content">
+        <div class="asset-modal-preview" id="calendarAssetModalPreview"></div>
+        <div class="asset-modal-info">
+          <div class="asset-modal-title-row">
+            <div class="asset-modal-icons" id="calendarAssetModalIcons"></div>
+            <h3 id="calendarAssetModalTitle">Asset details</h3>
+          </div>
+          <div class="asset-modal-meta" id="calendarAssetModalMeta"></div>
+          <div class="asset-modal-detail-list">
+            <div class="asset-modal-detail-item">
+              <span class="asset-modal-detail-label">Scheduled</span>
+              <span id="calendarAssetModalScheduled"></span>
+            </div>
+            <div class="asset-modal-detail-item">
+              <span class="asset-modal-detail-label">Status</span>
+              <span id="calendarAssetModalStatus"></span>
+            </div>
+            <div class="asset-modal-detail-item">
+              <span class="asset-modal-detail-label">Approvers</span>
+              <span id="calendarAssetModalApprovers"></span>
+            </div>
+            <div class="asset-modal-detail-item">
+              <span class="asset-modal-detail-label">Created</span>
+              <span id="calendarAssetModalCreated"></span>
+            </div>
+          </div>
+          <div class="asset-modal-caption-block">
+            <div class="asset-modal-caption-title">Caption</div>
+            <p id="calendarAssetModalCaption"></p>
+          </div>
+          <div class="asset-modal-brands">
+            <div class="asset-modal-caption-title">Brands</div>
+            <div id="calendarAssetModalBrands"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase SDK (must load before app.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
