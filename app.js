@@ -857,12 +857,39 @@ function updateStats() {
 
 // ── Media element creation ────────────────────
 
+function openLightbox(src, isVideo = false) {
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;";
+  if (isVideo) {
+    const vid = document.createElement("video");
+    vid.src = src;
+    vid.controls = true;
+    vid.autoplay = true;
+    vid.style.cssText = "max-width:92vw;max-height:88vh;border-radius:12px;cursor:default;";
+    vid.addEventListener("click", e => e.stopPropagation());
+    overlay.appendChild(vid);
+  } else {
+    const img = document.createElement("img");
+    img.src = src;
+    img.style.cssText = "max-width:92vw;max-height:88vh;border-radius:12px;object-fit:contain;cursor:default;box-shadow:0 8px 40px rgba(0,0,0,0.5);";
+    img.addEventListener("click", e => e.stopPropagation());
+    overlay.appendChild(img);
+  }
+  // Close on backdrop click or Escape key
+  overlay.addEventListener("click", () => overlay.remove());
+  const onKey = e => { if (e.key === "Escape") { overlay.remove(); document.removeEventListener("keydown", onKey); } };
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(overlay);
+}
+
 function createSingleMediaElement(item, fit = "contain") {
   if (item.type.startsWith("image/")) {
     const img = document.createElement("img");
     img.src = item.data;
     img.alt = item.name || "Media";
     img.style.objectFit = fit;
+    img.style.cursor = "zoom-in";
+    img.addEventListener("click", e => { e.stopPropagation(); openLightbox(item.data); });
     return img;
   }
   if (item.type.startsWith("video/")) {
@@ -875,19 +902,7 @@ function createSingleMediaElement(item, fit = "contain") {
       </svg>
       <div style="margin-top:10px;color:rgba(255,255,255,0.55);font-size:11px;font-family:Inter,sans-serif;text-align:center;padding:0 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">${escapeHtml(item.name || "Video")}</div>
       <div style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,0.15);color:white;font-size:10px;font-family:Inter,sans-serif;padding:3px 8px;border-radius:20px;font-weight:700;">VIDEO</div>`;
-    wrap.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const overlay = document.createElement("div");
-      overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;";
-      const vid = document.createElement("video");
-      vid.src = item.data;
-      vid.controls = true;
-      vid.autoplay = true;
-      vid.style.cssText = "max-width:90vw;max-height:85vh;border-radius:12px;";
-      overlay.appendChild(vid);
-      overlay.addEventListener("click", (ev) => { if (ev.target === overlay) overlay.remove(); });
-      document.body.appendChild(overlay);
-    });
+    wrap.addEventListener("click", (e) => { e.stopPropagation(); openLightbox(item.data, true); });
     return wrap;
   }
   const fallback = document.createElement("div");
