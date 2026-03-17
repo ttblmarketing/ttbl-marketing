@@ -617,15 +617,19 @@ svg {
   display: grid;
   grid-template-columns: 1fr;
   gap: 42px;
+  justify-items: center;
+  width: 100%;
 }
 
 .asset-row {
   display: grid;
-  grid-template-columns: 300px 1fr 96px;
+  grid-template-columns: 300px minmax(0, 500px) 96px;
   gap: 18px;
   align-items: start;
   justify-content: center;
   width: 100%;
+  max-width: 1060px;
+  margin: 0 auto;
 }
 
 .approve-col {
