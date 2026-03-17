@@ -857,29 +857,87 @@ function updateStats() {
 
 // ── Media element creation ────────────────────
 
-function openLightbox(src, isVideo = false) {
+function openLightbox(items, startIndex = 0) {
+  let current = startIndex;
+
   const overlay = document.createElement("div");
-  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;";
-  if (isVideo) {
-    const vid = document.createElement("video");
-    vid.src = src;
-    vid.controls = true;
-    vid.autoplay = true;
-    vid.style.cssText = "max-width:92vw;max-height:88vh;border-radius:12px;cursor:default;";
-    vid.addEventListener("click", e => e.stopPropagation());
-    overlay.appendChild(vid);
-  } else {
-    const img = document.createElement("img");
-    img.src = src;
-    img.style.cssText = "max-width:92vw;max-height:88vh;border-radius:12px;object-fit:contain;cursor:default;box-shadow:0 8px 40px rgba(0,0,0,0.5);";
-    img.addEventListener("click", e => e.stopPropagation());
-    overlay.appendChild(img);
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;";
+
+  // Media container
+  const mediaWrap = document.createElement("div");
+  mediaWrap.style.cssText = "position:relative;display:flex;align-items:center;justify-content:center;max-width:92vw;max-height:88vh;";
+
+  function renderMedia() {
+    mediaWrap.innerHTML = "";
+    const item = items[current];
+    if (item.type.startsWith("video/")) {
+      const vid = document.createElement("video");
+      vid.src = item.data;
+      vid.controls = true;
+      vid.autoplay = true;
+      vid.style.cssText = "max-width:88vw;max-height:82vh;border-radius:12px;";
+      vid.addEventListener("click", e => e.stopPropagation());
+      mediaWrap.appendChild(vid);
+    } else {
+      const img = document.createElement("img");
+      img.src = item.data;
+      img.style.cssText = "max-width:88vw;max-height:82vh;border-radius:12px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,0.5);display:block;";
+      img.addEventListener("click", e => e.stopPropagation());
+      mediaWrap.appendChild(img);
+    }
+    // Counter
+    if (items.length > 1) {
+      counter.textContent = `${current + 1} / ${items.length}`;
+    }
+    prevBtn.style.display = items.length > 1 ? "flex" : "none";
+    nextBtn.style.display = items.length > 1 ? "flex" : "none";
   }
-  // Close on backdrop click or Escape key
-  overlay.addEventListener("click", () => overlay.remove());
-  const onKey = e => { if (e.key === "Escape") { overlay.remove(); document.removeEventListener("keydown", onKey); } };
+
+  // Prev / Next buttons
+  const btnStyle = "position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;backdrop-filter:blur(4px);transition:background 0.15s;";
+
+  const prevBtn = document.createElement("button");
+  prevBtn.innerHTML = "&#8249;";
+  prevBtn.style.cssText = btnStyle + "left:-64px;";
+  prevBtn.addEventListener("click", e => { e.stopPropagation(); current = (current - 1 + items.length) % items.length; renderMedia(); });
+
+  const nextBtn = document.createElement("button");
+  nextBtn.innerHTML = "&#8250;";
+  nextBtn.style.cssText = btnStyle + "right:-64px;";
+  nextBtn.addEventListener("click", e => { e.stopPropagation(); current = (current + 1) % items.length; renderMedia(); });
+
+  // Counter badge
+  const counter = document.createElement("div");
+  counter.style.cssText = "position:absolute;bottom:-36px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.7);font-size:13px;font-weight:600;white-space:nowrap;";
+
+  // Close button
+  const closeBtn = document.createElement("button");
+  closeBtn.innerHTML = "✕";
+  closeBtn.style.cssText = "position:fixed;top:20px;right:24px;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:20px;width:40px;height:40px;border-radius:50%;cursor:pointer;z-index:10;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;";
+  closeBtn.addEventListener("click", e => { e.stopPropagation(); cleanup(); });
+
+  function cleanup() {
+    overlay.remove();
+    document.removeEventListener("keydown", onKey);
+  }
+
+  const onKey = e => {
+    if (e.key === "Escape") cleanup();
+    if (e.key === "ArrowLeft" && items.length > 1)  { current = (current - 1 + items.length) % items.length; renderMedia(); }
+    if (e.key === "ArrowRight" && items.length > 1) { current = (current + 1) % items.length; renderMedia(); }
+  };
   document.addEventListener("keydown", onKey);
+
+  overlay.addEventListener("click", cleanup);
+  mediaWrap.addEventListener("click", e => e.stopPropagation());
+
+  mediaWrap.appendChild(prevBtn);
+  mediaWrap.appendChild(nextBtn);
+  mediaWrap.appendChild(counter);
+  overlay.appendChild(mediaWrap);
+  overlay.appendChild(closeBtn);
   document.body.appendChild(overlay);
+  renderMedia();
 }
 
 function createSingleMediaElement(item, fit = "contain") {
@@ -889,7 +947,6 @@ function createSingleMediaElement(item, fit = "contain") {
     img.alt = item.name || "Media";
     img.style.objectFit = fit;
     img.style.cursor = "zoom-in";
-    img.addEventListener("click", e => { e.stopPropagation(); openLightbox(item.data); });
     return img;
   }
   if (item.type.startsWith("video/")) {
@@ -902,7 +959,7 @@ function createSingleMediaElement(item, fit = "contain") {
       </svg>
       <div style="margin-top:10px;color:rgba(255,255,255,0.55);font-size:11px;font-family:Inter,sans-serif;text-align:center;padding:0 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">${escapeHtml(item.name || "Video")}</div>
       <div style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,0.15);color:white;font-size:10px;font-family:Inter,sans-serif;padding:3px 8px;border-radius:20px;font-weight:700;">VIDEO</div>`;
-    wrap.addEventListener("click", (e) => { e.stopPropagation(); openLightbox(item.data, true); });
+    wrap.addEventListener("click", (e) => { e.stopPropagation(); wrap._openLightbox && wrap._openLightbox(); });
     return wrap;
   }
   const fallback = document.createElement("div");
@@ -928,7 +985,13 @@ function createMediaPreview(items, className = "media-preview", options = {}) {
   if (items.length === 1) {
     const inner = document.createElement("div");
     inner.className = `${className}-inner`;
-    inner.appendChild(createSingleMediaElement(items[0], mediaFit));
+    const el = createSingleMediaElement(items[0], mediaFit);
+    // Wire lightbox
+    el.style.cursor = "zoom-in";
+    const openFn = () => openLightbox(items, 0);
+    if (el.tagName === "IMG") el.addEventListener("click", e => { e.stopPropagation(); openFn(); });
+    else if (el._openLightbox === undefined) el._openLightbox = openFn;
+    inner.appendChild(el);
     wrapper.appendChild(inner);
     return wrapper;
   }
@@ -950,7 +1013,16 @@ function createMediaPreview(items, className = "media-preview", options = {}) {
   items.forEach((item, index) => {
     const slide = document.createElement("div");
     slide.className = `carousel-slide${index === 0 ? " active" : ""}`;
-    slide.appendChild(createSingleMediaElement(item, mediaFit));
+    const el = createSingleMediaElement(item, mediaFit);
+    // Wire lightbox for this slide
+    const openFn = () => openLightbox(items, index);
+    if (el.tagName === "IMG") {
+      el.style.cursor = "zoom-in";
+      el.addEventListener("click", e => { e.stopPropagation(); openFn(); });
+    } else {
+      el._openLightbox = openFn;
+    }
+    slide.appendChild(el);
     track.appendChild(slide);
     slides.push(slide);
 
