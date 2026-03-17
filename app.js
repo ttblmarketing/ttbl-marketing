@@ -865,7 +865,8 @@ function openLightbox(items, startIndex = 0) {
 
   // Media container
   const mediaWrap = document.createElement("div");
-  mediaWrap.style.cssText = "position:relative;display:flex;align-items:center;justify-content:center;max-width:92vw;max-height:88vh;";
+  mediaWrap.style.cssText = "position:relative;display:flex;align-items:center;justify-content:center;max-width:88vw;max-height:84vh;";
+  mediaWrap.addEventListener("click", e => e.stopPropagation());
 
   function renderMedia() {
     mediaWrap.innerHTML = "";
@@ -885,30 +886,29 @@ function openLightbox(items, startIndex = 0) {
       img.addEventListener("click", e => e.stopPropagation());
       mediaWrap.appendChild(img);
     }
-    // Counter
-    if (items.length > 1) {
-      counter.textContent = `${current + 1} / ${items.length}`;
-    }
-    prevBtn.style.display = items.length > 1 ? "flex" : "none";
-    nextBtn.style.display = items.length > 1 ? "flex" : "none";
+    counter.textContent = items.length > 1 ? `${current + 1} / ${items.length}` : "";
   }
 
-  // Prev / Next buttons
-  const btnStyle = "position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;backdrop-filter:blur(4px);transition:background 0.15s;";
+  // Prev / Next — fixed to viewport sides so they're always visible
+  const arrowStyle = "position:fixed;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:40px;line-height:1;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10001;backdrop-filter:blur(6px);transition:background 0.15s;";
 
   const prevBtn = document.createElement("button");
   prevBtn.innerHTML = "&#8249;";
-  prevBtn.style.cssText = btnStyle + "left:-64px;";
+  prevBtn.style.cssText = arrowStyle + "left:16px;";
   prevBtn.addEventListener("click", e => { e.stopPropagation(); current = (current - 1 + items.length) % items.length; renderMedia(); });
+  prevBtn.addEventListener("mouseenter", () => prevBtn.style.background = "rgba(255,255,255,0.32)");
+  prevBtn.addEventListener("mouseleave", () => prevBtn.style.background = "rgba(255,255,255,0.18)");
 
   const nextBtn = document.createElement("button");
   nextBtn.innerHTML = "&#8250;";
-  nextBtn.style.cssText = btnStyle + "right:-64px;";
+  nextBtn.style.cssText = arrowStyle + "right:16px;";
   nextBtn.addEventListener("click", e => { e.stopPropagation(); current = (current + 1) % items.length; renderMedia(); });
+  nextBtn.addEventListener("mouseenter", () => nextBtn.style.background = "rgba(255,255,255,0.32)");
+  nextBtn.addEventListener("mouseleave", () => nextBtn.style.background = "rgba(255,255,255,0.18)");
 
   // Counter badge
   const counter = document.createElement("div");
-  counter.style.cssText = "position:absolute;bottom:-36px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.7);font-size:13px;font-weight:600;white-space:nowrap;";
+  counter.style.cssText = "position:fixed;bottom:28px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.8);font-size:14px;font-weight:700;background:rgba(0,0,0,0.4);padding:4px 14px;border-radius:20px;backdrop-filter:blur(4px);z-index:10001;";
 
   // Close button
   const closeBtn = document.createElement("button");
@@ -931,11 +931,16 @@ function openLightbox(items, startIndex = 0) {
   overlay.addEventListener("click", cleanup);
   mediaWrap.addEventListener("click", e => e.stopPropagation());
 
-  mediaWrap.appendChild(prevBtn);
-  mediaWrap.appendChild(nextBtn);
-  mediaWrap.appendChild(counter);
   overlay.appendChild(mediaWrap);
+  overlay.appendChild(prevBtn);
+  overlay.appendChild(nextBtn);
+  overlay.appendChild(counter);
   overlay.appendChild(closeBtn);
+  if (items.length <= 1) {
+    prevBtn.style.display = "none";
+    nextBtn.style.display = "none";
+    counter.style.display = "none";
+  }
   document.body.appendChild(overlay);
   renderMedia();
 }
@@ -1162,14 +1167,7 @@ function createMediaCard(item) {
   // Remove the old hidden approver select from template
   if (oldApproverSelect) oldApproverSelect.remove();
 
-  // Inject approver checklist into the left side panel, below brands
-  const brandsPanel = fragment.querySelector(".brands-panel");
-  if (brandsPanel) {
-    const approverSection = document.createElement("div");
-    approverSection.className = "approver-section-panel";
-    approverSection.appendChild(createApproverSelector(item));
-    brandsPanel.after(approverSection);
-  }
+  // Approver checklist hidden — approval done via buttons on the right
 
   // Always show all 4 approver buttons — red = pending, green = approved
   const approveCol = fragment.querySelector(".approve-col");
