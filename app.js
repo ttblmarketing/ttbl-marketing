@@ -24,7 +24,28 @@ const EMAILJS_TEMPLATE_ID = "template_se516i8";
 const EMAILJS_PUBLIC_KEY  = "RYDxaXRTFKuYUxfYE";
 
 
+// ── Admin accounts (full access + upload) ────────
+const ADMIN_EMAILS = [
+  "marketing.team@ttbl.mt",
+  "thomas.cuschieri@gmail.com"
+];
+
+function isAdmin() {
+  if (!currentUser || !currentUser.email) return false;
+  return ADMIN_EMAILS.map(e => e.toLowerCase()).includes(currentUser.email.toLowerCase());
+}
+
 const DEFAULT_UPLOADER = "Marketing Team";
+
+// ── Accounts with upload access ───────────────
+const UPLOADER_EMAILS = [
+  "marketing.team@ttbl.mt",
+  "thomas.cuschieri@ttbl.mt"
+];
+
+function isUploader() {
+  return currentUser && UPLOADER_EMAILS.includes(currentUser.email.toLowerCase());
+}
 const DELETE_PASSWORD  = "DELETE";
 const EDIT_PASSWORD    = "EDIT";
 
@@ -246,6 +267,14 @@ async function showApp() {
   if (userLabelSidebar) userLabelSidebar.textContent = displayEmail;
   uploaderInput.value = DEFAULT_UPLOADER;
   updateDropdownLabel();
+
+  // Role-based UI
+  const uploadSection = document.querySelector(".upload-section");
+  const notifyBtn     = document.getElementById("notifyBtn");
+  const admin         = isAdmin();
+  if (uploadSection) uploadSection.style.display = admin ? "" : "none";
+  if (notifyBtn)     notifyBtn.style.display     = admin ? "" : "none";
+
   await loadAndRender();
   setInterval(loadAndRender, 60000);
 
@@ -834,11 +863,34 @@ function isArchived(item) {
 function getActiveMedia()   { return media.filter(item => !isArchived(item)); }
 function getArchivedMedia() { return media.filter(item =>  isArchived(item)); }
 
+// Map logged-in email to approver name for filtering
+function getCurrentApproverName() {
+  if (!currentUser) return null;
+  const email = currentUser.email.toLowerCase();
+  const map = {
+    "norbert.vella@ttbl.mt":    "Norbert Vella",
+    "thomas.cuschieri@ttbl.mt": "Thomas Cuschieri",
+    "tony.micallef@ttbl.mt":    "Tony Micallef",
+    "humbert.mozzi@ttbl.mt":    "Humbert Mozzi",
+    // fallback — add more as needed
+    "thomas.cuschieri@gmail.com": "Thomas Cuschieri"
+  };
+  return map[email] || null;
+}
+
+function getVisibleMedia(pool) {
+  if (isUploader()) return pool;
+  // Approvers only see assets assigned to them
+  const name = getCurrentApproverName();
+  if (!name) return pool; // unknown user — show all
+  return pool.filter(item => (item.approvers || []).includes(name));
+}
+
 function getFilteredMedia() {
   const searchTerm     = searchInput.value.trim().toLowerCase();
   const selectedStatus = statusFilter.value;
 
-  return getActiveMedia().filter(item => {
+  return getVisibleMedia(getActiveMedia()).filter(item => {
     const brandText    = (item.brands  || []).map(b => `${b.brandName} ${b.platform}`).join(" ");
     const approverText = (item.approvers || []).join(" ");
     const searchable   = [brandText, approverText, item.publishDate, item.publishTime, item.notes,
@@ -906,7 +958,7 @@ function handleUploadPreview() {
 // ── Stats ─────────────────────────────────────
 
 function updateStats() {
-  const active = getActiveMedia();
+  const active = getVisibleMedia(getActiveMedia());
   totalCount.textContent    = active.length;
   pendingCount.textContent  = active.filter(i => i.status === "Pending").length;
   approvedCount.textContent = active.filter(i => i.status === "Approved").length;
@@ -1225,27 +1277,58 @@ function createMediaCard(item) {
   // Remove the old hidden approver select from template
   if (oldApproverSelect) oldApproverSelect.remove();
 
-  // Approver checklist hidden — approval done via buttons on the right
+  // Show approver selector (checklist) only for uploaders
+  if (isUploader()) {
+    const approverSection = document.createElement("div");
+    approverSection.className = "approver-section-panel";
+    approverSection.appendChild(createApproverSelector(item));
+    const brandsPanel = fragment.querySelector(".brands-panel");
+    if (brandsPanel) brandsPanel.after(approverSection);
+  }
 
-  // Always show all 4 approver buttons — red = pending, green = approved
+  // Build approve buttons:
+  // Uploaders see all assigned approvers' buttons
+  // Approvers only see their own button
   const approveCol = fragment.querySelector(".approve-col");
   approveCol.innerHTML = "";
   const approvedBy2 = item.approvedBy || [];
 
-  ALLOWED_USERS.forEach(approverName => {
-    const isApproved = approvedBy2.includes(approverName);
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "approve-icon-btn" + (isApproved ? " approved" : "");
-    btn.title = `${approverName} — click to ${isApproved ? "unapprove" : "approve"}`;
-    btn.innerHTML = `
-      <span class="tick-icon">✔</span>
-      <span class="approve-label">${escapeHtml(approverName.split(" ")[0])}</span>`;
-    btn.addEventListener("click", () => toggleApproval(item.id, approverName));
-    approveCol.appendChild(btn);
-  });
+  const buttonsToShow = isUploader()
+    ? (item.approvers && item.approvers.length ? item.approvers : [])
+    : (item.approvers || []).filter(name => {
+        const email = currentUser && currentUser.email ? currentUser.email.toLowerCase() : "";
+        return name.toLowerCase().includes(email.split("@")[0].replace(".", " ")) ||
+               email.includes(name.split(" ")[0].toLowerCase()) ||
+               email.includes(name.split(" ")[1] ? name.split(" ")[1].toLowerCase() : "");
+      });
+
+  if (buttonsToShow.length > 0) {
+    buttonsToShow.forEach(approverName => {
+      const isApproved = approvedBy2.includes(approverName);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "approve-icon-btn" + (isApproved ? " approved" : "");
+      btn.title = `${approverName} — click to ${isApproved ? "unapprove" : "approve"}`;
+      btn.innerHTML = `
+        <span class="tick-icon">✔</span>
+        <span class="approve-label">${escapeHtml(approverName.split(" ")[0])}</span>`;
+      btn.addEventListener("click", () => toggleApproval(item.id, approverName));
+      approveCol.appendChild(btn);
+    });
+  } else if (!isUploader()) {
+    const note = document.createElement("div");
+    note.className = "approve-placeholder";
+    note.textContent = "Not assigned to you";
+    approveCol.appendChild(note);
+  }
 
   if (approveIconBtn) approveIconBtn.style.display = "none";
+
+  // Hide edit/delete for approvers
+  if (!isUploader()) {
+    if (editBtn)   editBtn.style.display   = "none";
+    if (deleteBtn) deleteBtn.style.display = "none";
+  }
 
   editBtn.addEventListener("click",   () => openEditPanel(item.id));
   deleteBtn.addEventListener("click", () => deleteAsset(item.id));
@@ -1475,8 +1558,8 @@ function createLibraryCard(item, archived = false) {
 function renderLibrary() {
   libraryGrid.innerHTML  = "";
   archiveGrid.innerHTML  = "";
-  const current  = getActiveMedia();
-  const archived = getArchivedMedia();
+  const current  = getVisibleMedia(getActiveMedia());
+  const archived = getVisibleMedia(getArchivedMedia());
 
   libraryEmptyState.classList.toggle("hidden", current.length > 0);
   current.forEach(item => libraryGrid.appendChild(createLibraryCard(item, false)));
@@ -1498,8 +1581,8 @@ function renderAnalytics() {
   commentBreakdown.innerHTML  = "";
   recentActivity.innerHTML    = "";
 
-  const active   = getActiveMedia();
-  const archived = getArchivedMedia();
+  const active   = getVisibleMedia(getActiveMedia());
+  const archived = getVisibleMedia(getArchivedMedia());
 
   statusBreakdown.appendChild(createAnalyticsRow("Pending",  active.filter(m => m.status === "Pending").length));
   statusBreakdown.appendChild(createAnalyticsRow("Approved", active.filter(m => m.status === "Approved").length));
