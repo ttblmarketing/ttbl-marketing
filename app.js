@@ -1295,30 +1295,23 @@ function createMediaCard(item) {
     if (brandsPanel) brandsPanel.after(approverSection);
   }
 
-  // Build approve buttons — all users see all assigned approver buttons
+  // Always show all 4 approvers as buttons for every asset
   const approveCol = fragment.querySelector(".approve-col");
   approveCol.innerHTML = "";
   const approvedBy2 = item.approvedBy || [];
 
-  if (item.approvers && item.approvers.length > 0) {
-    item.approvers.forEach(approverName => {
-      const isApproved = approvedBy2.includes(approverName);
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "approve-icon-btn" + (isApproved ? " approved" : "");
-      btn.title = `${approverName} — click to ${isApproved ? "unapprove" : "approve"}`;
-      btn.innerHTML = `
-        <span class="tick-icon">✔</span>
-        <span class="approve-label">${escapeHtml(approverName.split(" ")[0])}</span>`;
-      btn.addEventListener("click", () => toggleApproval(item.id, approverName));
-      approveCol.appendChild(btn);
-    });
-  } else {
-    const placeholder = document.createElement("div");
-    placeholder.className = "approve-placeholder";
-    placeholder.textContent = "No approvers assigned";
-    approveCol.appendChild(placeholder);
-  }
+  ALLOWED_USERS.forEach(approverName => {
+    const isApproved = approvedBy2.includes(approverName);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "approve-icon-btn" + (isApproved ? " approved" : "");
+    btn.title = `${approverName} — click to ${isApproved ? "unapprove" : "approve"}`;
+    btn.innerHTML = `
+      <span class="tick-icon">✔</span>
+      <span class="approve-label">${escapeHtml(approverName.split(" ")[0])}</span>`;
+    btn.addEventListener("click", () => toggleApproval(item.id, approverName));
+    approveCol.appendChild(btn);
+  });
 
   if (approveIconBtn) approveIconBtn.style.display = "none";
 
