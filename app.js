@@ -45,9 +45,7 @@ const UPLOADER_EMAILS = [
   "thomas.cuschieri@ttbl.mt"
 ];
 
-function isUploader() {
-  return currentUser && UPLOADER_EMAILS.includes(currentUser.email.toLowerCase());
-}
+
 const DELETE_PASSWORD  = "DELETE";
 const EDIT_PASSWORD    = "EDIT";
 
@@ -893,7 +891,7 @@ function getCurrentApproverName() {
 }
 
 function getVisibleMedia(pool) {
-  if (isUploader()) return pool;
+  if (isAdmin()) return pool;
   // Approvers only see assets assigned to them
   const name = getCurrentApproverName();
   if (!name) return pool; // unknown user — show all
@@ -1292,7 +1290,7 @@ function createMediaCard(item) {
   if (oldApproverSelect) oldApproverSelect.remove();
 
   // Show approver selector (checklist) only for uploaders
-  if (isUploader()) {
+  if (isAdmin()) {
     const approverSection = document.createElement("div");
     approverSection.className = "approver-section-panel";
     approverSection.appendChild(createApproverSelector(item));
@@ -1300,24 +1298,13 @@ function createMediaCard(item) {
     if (brandsPanel) brandsPanel.after(approverSection);
   }
 
-  // Build approve buttons:
-  // Uploaders see all assigned approvers' buttons
-  // Approvers only see their own button
+  // Build approve buttons — all users see all assigned approver buttons
   const approveCol = fragment.querySelector(".approve-col");
   approveCol.innerHTML = "";
   const approvedBy2 = item.approvedBy || [];
 
-  const buttonsToShow = isUploader()
-    ? (item.approvers && item.approvers.length ? item.approvers : [])
-    : (item.approvers || []).filter(name => {
-        const email = currentUser && currentUser.email ? currentUser.email.toLowerCase() : "";
-        return name.toLowerCase().includes(email.split("@")[0].replace(".", " ")) ||
-               email.includes(name.split(" ")[0].toLowerCase()) ||
-               email.includes(name.split(" ")[1] ? name.split(" ")[1].toLowerCase() : "");
-      });
-
-  if (buttonsToShow.length > 0) {
-    buttonsToShow.forEach(approverName => {
+  if (item.approvers && item.approvers.length > 0) {
+    item.approvers.forEach(approverName => {
       const isApproved = approvedBy2.includes(approverName);
       const btn = document.createElement("button");
       btn.type = "button";
@@ -1329,17 +1316,17 @@ function createMediaCard(item) {
       btn.addEventListener("click", () => toggleApproval(item.id, approverName));
       approveCol.appendChild(btn);
     });
-  } else if (!isUploader()) {
-    const note = document.createElement("div");
-    note.className = "approve-placeholder";
-    note.textContent = "Not assigned to you";
-    approveCol.appendChild(note);
+  } else {
+    const placeholder = document.createElement("div");
+    placeholder.className = "approve-placeholder";
+    placeholder.textContent = "No approvers assigned";
+    approveCol.appendChild(placeholder);
   }
 
   if (approveIconBtn) approveIconBtn.style.display = "none";
 
-  // Hide edit/delete for approvers
-  if (!isUploader()) {
+  // Hide edit/delete for non-admins
+  if (!isAdmin()) {
     if (editBtn)   editBtn.style.display   = "none";
     if (deleteBtn) deleteBtn.style.display = "none";
   }
