@@ -346,11 +346,17 @@ function normalizeMediaItem(row) {
     fileTypes:   Array.isArray(row.file_types) ? row.file_types : [],
     fileNames:   Array.isArray(row.file_names) ? row.file_names : [],
     editing:     false,
-    items: (row.file_urls || []).map((url, i) => ({
-      name: (row.file_names || [])[i] || `file_${i}`,
-      type: (row.file_types || [])[i] || "image/jpeg",
-      data: url
-    }))
+    items: (row.file_urls || []).map((url, i) => {
+      const name = (row.file_names || [])[i] || `file_${i}`;
+      let type   = (row.file_types || [])[i] || "";
+      // Detect video from filename or URL if type is missing or wrong
+      if (!type || type === "image/jpeg") {
+        const ext = (name || url || "").split(".").pop().toLowerCase().split("?")[0];
+        if (["mp4","mov","avi","webm","mkv","m4v"].includes(ext)) type = "video/mp4";
+      }
+      if (!type) type = "image/jpeg";
+      return { name, type, data: url };
+    })
   };
 }
 
