@@ -15,7 +15,7 @@ const ALLOWED_USERS = [
 ];
 
 // ── Notification email (testing — update to full list later) ──
-const NOTIFICATION_EMAIL = "thomas@ttbl.mt";
+const NOTIFICATION_EMAIL = "thomas.cuschieri@gmail.com"; // temporary test — change back to thomas@ttbl.mt once confirmed working
 
 // ── EmailJS config ────────────────────────────────
 // Sign up free at emailjs.com, create a service + template, paste IDs here
@@ -662,11 +662,13 @@ async function sendNotifications() {
 
   const portalUrl = "https://ttblmarketing.github.io/ttbl-marketing";
 
-  const assetList = pendingAssets.map(a => {
-    const brands = (a.brands || []).map(b => b.brandName).join(", ");
-    const date   = a.publishDate ? a.publishDate : "No date set";
-    return `• ${brands} — Scheduled: ${date}`;
-  }).join("\n");
+  const assetListLines = pendingAssets.map(a => {
+    const uniqueBrands = [...new Set((a.brands || []).map(b => b.brandName))].join(" & ");
+    const platforms    = [...new Set((a.brands || []).map(b => b.platform))].join(", ");
+    const date         = a.publishDate || "No date set";
+    return "* " + uniqueBrands + " (" + platforms + ") - Scheduled: " + date;
+  });
+  const assetList = assetListLines.join(" | ");
 
   const btn = document.getElementById("notifyBtn");
   btn.disabled = true;
