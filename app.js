@@ -668,8 +668,7 @@ async function sendNotifications() {
     const brands = (a.brands || []).map(b => b.brandName).join(", ");
     const date   = a.publishDate ? a.publishDate : "No date set";
     return `• ${brands} — Scheduled: ${date}`;
-  }).join("
-");
+  }).join("\n");
 
   const btn = document.getElementById("notifyBtn");
   btn.disabled = true;
