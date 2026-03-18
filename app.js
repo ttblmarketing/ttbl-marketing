@@ -14,6 +14,15 @@ const ALLOWED_USERS = [
   "Humbert Mozzi"
 ];
 
+// ── Notification email (testing — update to full list later) ──
+const NOTIFICATION_EMAIL = "thomas@ttbl.mt";
+
+// ── EmailJS config ────────────────────────────────
+// Sign up free at emailjs.com, create a service + template, paste IDs here
+const EMAILJS_SERVICE_ID  = "service_y21mtl8";
+const EMAILJS_TEMPLATE_ID = "template_se516i8";
+const EMAILJS_PUBLIC_KEY  = "RYDxaXRTFKuYUxfYE";
+
 
 const DEFAULT_UPLOADER = "Marketing Team";
 const DELETE_PASSWORD  = "DELETE";
@@ -636,6 +645,56 @@ function clearSelectedBrands() {
 
 function updateDropdownLabel() {
   brandDropdownLabel.innerHTML = getSelectionPillsMarkup(getSelectedBrands());
+}
+
+// ── Notifications ─────────────────────────────
+
+async function sendNotifications() {
+  const pendingAssets = media.filter(item => item.status !== "Approved");
+
+  if (!pendingAssets.length) {
+    alert("No pending assets to notify about.");
+    return;
+  }
+
+  if (EMAILJS_SERVICE_ID === "YOUR_SERVICE_ID") {
+    alert("EmailJS is not configured yet. Please follow the setup steps to enable email notifications.");
+    return;
+  }
+
+  const portalUrl = "https://ttblmarketing.github.io/ttbl-marketing";
+
+  const assetList = pendingAssets.map(a => {
+    const brands = (a.brands || []).map(b => b.brandName).join(", ");
+    const date   = a.publishDate ? a.publishDate : "No date set";
+    return `• ${brands} — Scheduled: ${date}`;
+  }).join("
+");
+
+  const btn = document.getElementById("notifyBtn");
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_name:     "Thomas",
+      to_email:    NOTIFICATION_EMAIL,
+      from_name:   "TTBL Marketing",
+      asset_count: pendingAssets.length,
+      asset_list:  assetList,
+      portal_url:  portalUrl,
+    }, EMAILJS_PUBLIC_KEY);
+
+    alert(`✅ Notification sent to ${NOTIFICATION_EMAIL}!`);
+  } catch (err) {
+    console.error("Failed to send notification:", err);
+    alert(`Failed to send email. Error: ${err.text || err.message || JSON.stringify(err)}
+
+Check your EmailJS Service ID, Template ID and Public Key.`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Notify Approvers";
+  }
 }
 
 // ── Tab switching ─────────────────────────────
