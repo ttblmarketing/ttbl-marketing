@@ -15,7 +15,9 @@ const ALLOWED_USERS = [
 ];
 
 // ── Notification email (testing — update to full list later) ──
-const NOTIFICATION_EMAIL = "thomas.cuschieri@gmail.com"; // temporary test — change back to thomas@ttbl.mt once confirmed working
+const NOTIFICATION_EMAILS = [
+  "thomas@ttbl.mt"
+];
 
 // ── EmailJS config ────────────────────────────────
 // Sign up free at emailjs.com, create a service + template, paste IDs here
@@ -135,7 +137,9 @@ const BRAND_OPTIONS = [
   { brandName: "Panku Street Food",     platform: "linkedin"  },
   { brandName: "Panku Street Food Malta", platform: "facebook"  },
   { brandName: "Panku Street Food Malta", platform: "instagram" },
-  { brandName: "TTBL Ltd",              platform: "linkedin"  }
+  { brandName: "TTBL Ltd",              platform: "linkedin"  },
+  { brandName: "Panku Street Food",     platform: "tiktok"    },
+  { brandName: "Coffee Fellows Malta",  platform: "tiktok"    }
 ].sort((a, b) => {
   const n = a.brandName.localeCompare(b.brandName);
   return n !== 0 ? n : getPlatformLabel(a.platform).localeCompare(getPlatformLabel(b.platform));
@@ -705,23 +709,22 @@ async function sendNotifications() {
 
   try {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_name:     "Thomas",
-      to_email:    NOTIFICATION_EMAIL,
+      to_name:     "Team",
+      to_email:    NOTIFICATION_EMAILS.join(","),
       from_name:   "TTBL Marketing",
       asset_count: pendingAssets.length,
       asset_list:  assetList,
       portal_url:  portalUrl,
     }, EMAILJS_PUBLIC_KEY);
 
-    alert(`✅ Notification sent to ${NOTIFICATION_EMAIL}!`);
-  } catch (err) {
-    console.error("Failed to send notification:", err);
-    alert(`Failed to send email. Error: ${err.text || err.message || JSON.stringify(err)}
-
-Check your EmailJS Service ID, Template ID and Public Key.`);
-  } finally {
     btn.disabled = false;
     btn.textContent = "Notify Approvers";
+    alert(`✅ Notification sent to ${NOTIFICATION_EMAILS.length} recipients!`);
+  } catch (err) {
+    console.error("Failed to send notification:", err);
+    btn.disabled = false;
+    btn.textContent = "Notify Approvers";
+    alert(`Failed to send. Error: ${err.text || err.message || JSON.stringify(err)}`);
   }
 }
 
@@ -741,7 +744,7 @@ function switchTab(tab) {
 // ── Helpers ───────────────────────────────────
 
 function getPlatformLabel(platform) {
-  return { instagram: "Instagram", facebook: "Facebook", linkedin: "LinkedIn" }[platform] || platform;
+  return { instagram: "Instagram", facebook: "Facebook", linkedin: "LinkedIn", tiktok: "TikTok" }[platform] || platform;
 }
 
 function escapeHtml(value) {
@@ -786,6 +789,17 @@ function getPlatformIconMarkup(platform) {
         <svg class="platform-icon linkedin" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
           <rect width="24" height="24" rx="4" fill="#0A66C2"/>
           <path fill="#fff" d="M7.1 9.5h2.6v8.4H7.1zm1.3-4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm3.1 4h2.5v1.15h.03c.35-.66 1.2-1.35 2.47-1.35 2.64 0 3.13 1.74 3.13 4v4.6H17V13.8c0-.97-.02-2.22-1.35-2.22-1.36 0-1.57 1.06-1.57 2.15v4.17h-2.6V9.5z"/>
+        </svg>
+      </span>`;
+  }
+  if (platform === "tiktok") {
+    return `
+      <span class="platform-badge" title="TikTok" aria-label="TikTok">
+        <svg class="platform-icon tiktok" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <rect width="24" height="24" rx="6" fill="#010101"/>
+          <path fill="#FF0050" d="M17.5 8.3a4.1 4.1 0 0 1-2.5-.8v5.6a4.2 4.2 0 1 1-4.2-4.2h.4v2.1h-.4a2.1 2.1 0 1 0 2.1 2.1V4h2.1a4.1 4.1 0 0 0 4.1 4.1v.2h-1.6z"/>
+          <path fill="#00F2EA" d="M16.9 7.7a4.1 4.1 0 0 1-2.5-.8v5.6a4.2 4.2 0 1 1-4.2-4.2h.4v2.1h-.4a2.1 2.1 0 1 0 2.1 2.1V3.4h2.1a4.1 4.1 0 0 0 4.1 4.1l-1.6.2z"/>
+          <path fill="#fff" d="M16.2 7.1a4.1 4.1 0 0 1-2.5-.9v5.6a4.2 4.2 0 1 1-4.1-4.2h.3v2.1h-.3a2.1 2.1 0 1 0 2.1 2.1V2.8h2a4.1 4.1 0 0 0 4.2 4.1l-1.7.2z"/>
         </svg>
       </span>`;
   }
