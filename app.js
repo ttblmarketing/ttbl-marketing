@@ -1064,13 +1064,14 @@ function openLightbox(items, startIndex = 0) {
   renderMedia();
 }
 
-function createSingleMediaElement(item, fit = "contain") {
+function createSingleMediaElement(item, fit = "contain", onOpen = null) {
   if (item.type.startsWith("image/")) {
     const img = document.createElement("img");
     img.src = item.data;
     img.alt = item.name || "Media";
     img.style.objectFit = fit;
     img.style.cursor = "zoom-in";
+    if (onOpen) img.addEventListener("click", e => { e.stopPropagation(); onOpen(); });
     return img;
   }
   if (item.type.startsWith("video/")) {
@@ -1083,7 +1084,17 @@ function createSingleMediaElement(item, fit = "contain") {
       </svg>
       <div style="margin-top:10px;color:rgba(255,255,255,0.55);font-size:11px;font-family:Inter,sans-serif;text-align:center;padding:0 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">${escapeHtml(item.name || "Video")}</div>
       <div style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,0.15);color:white;font-size:10px;font-family:Inter,sans-serif;padding:3px 8px;border-radius:20px;font-weight:700;">VIDEO</div>`;
-    wrap.addEventListener("click", (e) => { e.stopPropagation(); wrap._openLightbox && wrap._openLightbox(); });
+    wrap.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (onOpen) { onOpen(); return; }
+      // Fallback — open inline video player
+      const video = document.createElement("video");
+      video.src = item.data;
+      video.controls = true;
+      video.autoplay = true;
+      video.style.cssText = "width:100%;height:100%;border-radius:8px;background:#000;";
+      wrap.replaceWith(video);
+    });
     return wrap;
   }
   const fallback = document.createElement("div");
@@ -1109,12 +1120,8 @@ function createMediaPreview(items, className = "media-preview", options = {}) {
   if (items.length === 1) {
     const inner = document.createElement("div");
     inner.className = `${className}-inner`;
-    const el = createSingleMediaElement(items[0], mediaFit);
-    // Wire lightbox
-    el.style.cursor = "zoom-in";
     const openFn = () => openLightbox(items, 0);
-    if (el.tagName === "IMG") el.addEventListener("click", e => { e.stopPropagation(); openFn(); });
-    else if (el._openLightbox === undefined) el._openLightbox = openFn;
+    const el = createSingleMediaElement(items[0], mediaFit, openFn);
     inner.appendChild(el);
     wrapper.appendChild(inner);
     return wrapper;
@@ -1137,15 +1144,8 @@ function createMediaPreview(items, className = "media-preview", options = {}) {
   items.forEach((item, index) => {
     const slide = document.createElement("div");
     slide.className = `carousel-slide${index === 0 ? " active" : ""}`;
-    const el = createSingleMediaElement(item, mediaFit);
-    // Wire lightbox for this slide
     const openFn = () => openLightbox(items, index);
-    if (el.tagName === "IMG") {
-      el.style.cursor = "zoom-in";
-      el.addEventListener("click", e => { e.stopPropagation(); openFn(); });
-    } else {
-      el._openLightbox = openFn;
-    }
+    const el = createSingleMediaElement(item, mediaFit, openFn);
     slide.appendChild(el);
     track.appendChild(slide);
     slides.push(slide);
