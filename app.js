@@ -891,11 +891,8 @@ function getCurrentApproverName() {
 }
 
 function getVisibleMedia(pool) {
-  if (isAdmin()) return pool;
-  // Approvers only see assets assigned to them
-  const name = getCurrentApproverName();
-  if (!name) return pool; // unknown user — show all
-  return pool.filter(item => (item.approvers || []).includes(name));
+  // All users see all assets — approve buttons control who approves what
+  return pool;
 }
 
 function getFilteredMedia() {
