@@ -1889,12 +1889,18 @@ svg {
   /* ── Asset cards ── */
   .media-grid             { grid-template-columns: 1fr; }
 
+  /* Mobile order: 1. image/video  2. approve buttons  3. brands + comments */
   .asset-row {
-    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column;
     gap: 12px;
   }
 
-  /* Approve buttons stack horizontally below card */
+  .media-card             { order: 1; width: 100%; max-width: 100%; }
+  .approve-col            { order: 2; }
+  .comments-side          { order: 3; width: 100%; max-width: 100%; }
+
+  /* Approve buttons stack horizontally */
   .approve-col {
     display: flex;
     flex-direction: row;
@@ -1916,9 +1922,6 @@ svg {
 
   .approve-icon-btn .tick-icon { font-size: 18px; }
   .approve-icon-btn .approve-label { font-size: 11px; }
-
-  .comments-side,
-  .media-card             { width: 100%; max-width: 100%; }
 
   /* ── Toolbar ── */
   .toolbar                { flex-direction: column; gap: 10px; }
@@ -2223,4 +2226,52 @@ svg {
   color: #b45309;
   font-weight: 700;
   text-decoration: underline;
+}
+
+/* ── NOTIFY BUTTON & TOPBAR ACTIONS ─────────────── */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.notify-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  box-shadow: 0 2px 10px rgba(99, 91, 255, 0.3);
+}
+
+.notify-btn:hover {
+  background: #5048e5;
+  box-shadow: 0 4px 16px rgba(99, 91, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.notify-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .notify-btn {
+    flex: 1;
+    justify-content: center;
+  }
 }
